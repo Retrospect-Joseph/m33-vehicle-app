@@ -9,7 +9,7 @@
 #include "board_pins.h"
 #include "board_time.h"
 
-#define BOARD_GPS_RX_RING_SIZE 512U
+#define BOARD_GPS_RX_RING_SIZE 4096U
 
 typedef struct
 {
@@ -19,6 +19,8 @@ typedef struct
 } board_uart_ring_t;
 
 static board_uart_ring_t g_gps_rx_ring;
+static volatile uint32_t g_gps_rx_overflow_count;
+static volatile uint32_t g_gps_rx_byte_count;
 
 static uint16_t BOARD_UART_RingNext(uint16_t index)
 {
@@ -130,11 +132,17 @@ void BOARD_GPS_UART_IRQHandler(void)
 {
     uint32_t flags = LPUART_GetStatusFlags(BOARD_GPS_UART_BASE);
 
-    if ((flags & (uint32_t)kLPUART_RxDataRegFullFlag) != 0U)
+   if ((flags & (uint32_t)kLPUART_RxDataRegFullFlag) != 0U)
+{
+    const uint8_t value = LPUART_ReadByte(BOARD_GPS_UART_BASE);
+
+    g_gps_rx_byte_count++;
+
+    if (!BOARD_UART_RingPush(&g_gps_rx_ring, value))
     {
-        const uint8_t value = LPUART_ReadByte(BOARD_GPS_UART_BASE);
-        (void)BOARD_UART_RingPush(&g_gps_rx_ring, value);
+        g_gps_rx_overflow_count++;
     }
+}
 
     SDK_ISR_EXIT_BARRIER;
 }

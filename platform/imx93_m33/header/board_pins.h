@@ -14,11 +14,11 @@
 #define BOARD_L9966_SPI_SRC_CLOCK_HZ     (24000000U)
 #define BOARD_L9966_SPI_PCS              kLPSPI_Pcs0
 
-#define BOARD_GPS_UART_BASE              LPUART4
-#define BOARD_GPS_UART_BAUDRATE          (9600U)
+#define BOARD_GPS_UART_BASE              LPUART7
+#define BOARD_GPS_UART_BAUDRATE          (38400U)
 #define BOARD_GPS_UART_SRC_CLOCK_HZ      (24000000U)
-#define BOARD_GPS_UART_IRQn              LPUART4_IRQn
-#define BOARD_GPS_UART_IRQHandler        LPUART4_IRQHandler
+#define BOARD_GPS_UART_IRQn              LPUART7_IRQn
+#define BOARD_GPS_UART_IRQHandler        LPUART7_IRQHandler
 
 #define BOARD_L9966_CS_GPIO              GPIO1
 #define BOARD_L9966_CS_PIN               (3U)
