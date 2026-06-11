@@ -1,0 +1,60 @@
+# Build outputs
+build/
+build-*/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+
+# Firmware artifacts
+*.elf
+*.axf
+*.bin
+*.hex
+*.map
+*.lst
+*.o
+*.obj
+*.a
+*.so
+*.d
+*.su
+
+# MCUXpresso / Eclipse / IDE files
+.metadata/
+.settings/
+.project
+.cproject
+.launch
+Debug/
+Release/
+
+# Python/cache/temp
+__pycache__/
+*.pyc
+.cache/
+tmp/
+temp/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.swp
+*.swo
+
+# Secrets / credentials
+.env
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+*secret*
+*token*
+*credential*
