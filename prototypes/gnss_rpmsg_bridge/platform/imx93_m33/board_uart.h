@@ -1,0 +1,12 @@
+#ifndef BOARD_UART_IMX93_M33_H
+#define BOARD_UART_IMX93_M33_H
+
+#include <stddef.h>
+#include <stdint.h>
+
+void BOARD_UART_Init(void);
+size_t BOARD_UART_GPS_Write(const uint8_t *data, size_t length);
+size_t BOARD_UART_GPS_Read(uint8_t *data, size_t max_length, uint32_t timeout_ms);
+size_t BOARD_UART_GPS_Available(void);
+
+#endif
