@@ -1,0 +1,3 @@
+/mnt/c/coding/TESTING_AREA/m33sdk/mcuxsdk/examples/_boards/mcimx93evk/user_apps/m33_vehicle_app/build/debug/CMakeFiles/m33_vehicle_app.elf.dir
+/mnt/c/coding/TESTING_AREA/m33sdk/mcuxsdk/examples/_boards/mcimx93evk/user_apps/m33_vehicle_app/build/debug/CMakeFiles/edit_cache.dir
+/mnt/c/coding/TESTING_AREA/m33sdk/mcuxsdk/examples/_boards/mcimx93evk/user_apps/m33_vehicle_app/build/debug/CMakeFiles/rebuild_cache.dir

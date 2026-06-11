@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/home/mfking2/.vscode-server/data/User/globalStorage/themastercoder007.lvgl-live-preview/lvgl/9.4.0",
+                "/home/mfking2/.vscode-server/data/User/globalStorage/themastercoder007.lvgl-live-preview/lvgl/9.4.0/src"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerPath": "/usr/bin/clang-18"
+        }
+    ],
+    "version": 4
+}
