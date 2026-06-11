@@ -58,3 +58,11 @@ id_ed25519*
 *secret*
 *token*
 *credential*
+
+# Windows alternate data stream files copied into WSL
+*:Zone.Identifier
+
+# Build directories
+build/
+build-*/
+cmake-build-*/
