@@ -1,15 +1,32 @@
 #include "board_uart.h"
 
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "fsl_common.h"
 #include "fsl_lpuart.h"
 
-#include "board_pins.h"
-#include "board_time.h"
+/*
+ * Proven Linux-side mapping before handoff:
+ *
+ *   /dev/ttyLP6
+ *   /soc@0/bus@42000000/serial@42690000
+ *   alias serial6
+ *   baud 38400
+ *
+ * Expected M33-side peripheral:
+ *
+ *   LPUART7
+ */
+#define BOARD_GPS_UART_BASE              LPUART7
+#define BOARD_GPS_UART_BAUDRATE          (38400U)
+#define BOARD_GPS_UART_SRC_CLOCK_HZ      (24000000U)
+#define BOARD_GPS_UART_IRQn              LPUART7_IRQn
+#define BOARD_GPS_UART_IRQHandler        LPUART7_IRQHandler
 
-#define BOARD_GPS_RX_RING_SIZE 4096U
+#define BOARD_GPS_RX_RING_SIZE           (4096U)
 
 typedef struct
 {
@@ -19,8 +36,8 @@ typedef struct
 } board_uart_ring_t;
 
 static board_uart_ring_t g_gps_rx_ring;
-static volatile uint32_t g_gps_rx_overflow_count;
 static volatile uint32_t g_gps_rx_byte_count;
+static volatile uint32_t g_gps_rx_overflow_count;
 
 static uint16_t BOARD_UART_RingNext(uint16_t index)
 {
@@ -58,14 +75,24 @@ void BOARD_UART_Init(void)
     lpuart_config_t config;
 
     memset(&g_gps_rx_ring, 0, sizeof(g_gps_rx_ring));
+    g_gps_rx_byte_count = 0U;
+    g_gps_rx_overflow_count = 0U;
 
     LPUART_GetDefaultConfig(&config);
+
     config.baudRate_Bps = BOARD_GPS_UART_BAUDRATE;
     config.enableTx = true;
     config.enableRx = true;
 
-    LPUART_Init(BOARD_GPS_UART_BASE, &config, BOARD_GPS_UART_SRC_CLOCK_HZ);
-    LPUART_EnableInterrupts(BOARD_GPS_UART_BASE, (uint32_t)kLPUART_RxDataRegFullInterruptEnable);
+    LPUART_Init(
+        BOARD_GPS_UART_BASE,
+        &config,
+        BOARD_GPS_UART_SRC_CLOCK_HZ);
+
+    LPUART_EnableInterrupts(
+        BOARD_GPS_UART_BASE,
+        (uint32_t)kLPUART_RxDataRegFullInterruptEnable);
+
     EnableIRQ(BOARD_GPS_UART_IRQn);
 }
 
@@ -84,10 +111,9 @@ size_t BOARD_UART_GPS_Write(const uint8_t *data, size_t length)
     return length;
 }
 
-size_t BOARD_UART_GPS_Read(uint8_t *data, size_t max_length, uint32_t timeout_ms)
+size_t BOARD_UART_GPS_Read(uint8_t *data, size_t max_length)
 {
     size_t count = 0U;
-    const uint32_t start = BOARD_TIME_GetMs();
 
     if ((data == NULL) || (max_length == 0U))
     {
@@ -98,21 +124,12 @@ size_t BOARD_UART_GPS_Read(uint8_t *data, size_t max_length, uint32_t timeout_ms
     {
         uint8_t value;
 
-        if (BOARD_UART_RingPop(&g_gps_rx_ring, &value))
-        {
-            data[count++] = value;
-            continue;
-        }
-
-        if (timeout_ms == 0U)
+        if (!BOARD_UART_RingPop(&g_gps_rx_ring, &value))
         {
             break;
         }
 
-        if ((BOARD_TIME_GetMs() - start) >= timeout_ms)
-        {
-            break;
-        }
+        data[count++] = value;
     }
 
     return count;
@@ -128,21 +145,39 @@ size_t BOARD_UART_GPS_Available(void)
     return (size_t)(BOARD_GPS_RX_RING_SIZE - g_gps_rx_ring.tail + g_gps_rx_ring.head);
 }
 
+uint32_t BOARD_UART_GPS_RxByteCount(void)
+{
+    return g_gps_rx_byte_count;
+}
+
+uint32_t BOARD_UART_GPS_RxOverflowCount(void)
+{
+    return g_gps_rx_overflow_count;
+}
+
 void BOARD_GPS_UART_IRQHandler(void)
 {
-    uint32_t flags = LPUART_GetStatusFlags(BOARD_GPS_UART_BASE);
+    const uint32_t flags = LPUART_GetStatusFlags(BOARD_GPS_UART_BASE);
 
-   if ((flags & (uint32_t)kLPUART_RxDataRegFullFlag) != 0U)
-{
-    const uint8_t value = LPUART_ReadByte(BOARD_GPS_UART_BASE);
-
-    g_gps_rx_byte_count++;
-
-    if (!BOARD_UART_RingPush(&g_gps_rx_ring, value))
+    if ((flags & (uint32_t)kLPUART_RxOverrunFlag) != 0U)
     {
         g_gps_rx_overflow_count++;
+        (void)LPUART_ClearStatusFlags(
+            BOARD_GPS_UART_BASE,
+            (uint32_t)kLPUART_RxOverrunFlag);
     }
-}
+
+    if ((flags & (uint32_t)kLPUART_RxDataRegFullFlag) != 0U)
+    {
+        const uint8_t value = LPUART_ReadByte(BOARD_GPS_UART_BASE);
+
+        g_gps_rx_byte_count++;
+
+        if (!BOARD_UART_RingPush(&g_gps_rx_ring, value))
+        {
+            g_gps_rx_overflow_count++;
+        }
+    }
 
     SDK_ISR_EXIT_BARRIER;
 }
